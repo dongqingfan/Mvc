@@ -8,22 +8,44 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.AspNetCore.Mvc.Testing
+namespace Microsoft.AspNetCore.Mvc.Testing.Handlers
 {
+    /// <summary>
+    /// A <see cref="DelegatingHandler"/> that follows redirect responses.
+    /// </summary>
     public class RedirectHandler : DelegatingHandler
     {
+        internal const int DefaultMaxRedirects = 7;
+
+        /// <summary>
+        /// Creates a new instance of <see cref="RedirectHandler"/>.
+        /// </summary>
         public RedirectHandler()
-            : this(maxRedirects: 7)
+            : this(maxRedirects: DefaultMaxRedirects)
         {
         }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="RedirectHandler"/>.
+        /// </summary>
+        /// <param name="maxRedirects">The maximun number of redirect responses to follow. It must be
+        /// equal or greater than 0.</param>
         public RedirectHandler(int maxRedirects)
         {
+            if (maxRedirects <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxRedirects));
+            }
+
             MaxRedirects = maxRedirects;
         }
 
+        /// <summary>
+        /// Gets the maximum number of redirects this handler will follow.
+        /// </summary>
         public int MaxRedirects { get; }
 
+        /// <inheritdoc />
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var remainingRedirects = MaxRedirects;
